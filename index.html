@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DEE PRO V3 by TAI</title>
+    
+    <!-- PWA 與 iPhone 全螢幕設定 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@1,900&family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* 復古莫蘭迪/古銅配色 */
+            --bg-vintage: #1c1d1a; /* 深咖啡黑 */
+            --paper-light: #e6d5b8; /* 舊紙張色 */
+            --copper-primary: #b08d57; /* 古銅金 */
+            --copper-dark: #7a5c37;
+            --accent-sage: #4a5d4e; /* 鼠尾草綠 */
+            --danger-red: #8a3c3c; /* 復古紅 */
+        }
+
+        body { 
+            background-color: var(--bg-vintage); 
+            color: var(--paper-light); 
+            font-family: 'Inter', -apple-system, sans-serif;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.02) 0%, transparent 100%);
+        }
+
+        /* --- 復古 Logo 容器 --- */
+        .logo-wrapper {
+            position: relative;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-podium {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(176, 141, 87, 0.1) 0%, transparent 100%);
+            border-radius: 40px;
+            border: 1px solid rgba(176, 141, 87, 0.2);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.4);
+        }
+
+        /* 復古文字 Logo */
+        .logo-main-text {
+            font-family: 'Crimson Pro', serif;
+            font-size: 48px;
+            font-weight: 900;
+            font-style: italic;
+            color: var(--paper-light);
+            text-shadow: 2px 2px 0px var(--copper-dark), 4px 4px 15px rgba(0,0,0,0.5);
+            letter-spacing: -1px;
+        }
+
+        /* --- 質感 UI 元件 --- */
+        .glass-header {
+            background: rgba(28, 29, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(176, 141, 87, 0.15);
+        }
+
+        .vintage-card {
+            background: rgba(45, 48, 45, 0.4);
+            border: 1px solid rgba(176, 141, 87, 0.1);
+            border-radius: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        /* 錯誤狀態樣式 */
+        .vintage-card.error-state {
+            border: 1px solid rgba(138, 60, 60, 0.6);
+            background: rgba(138, 60, 60, 0.1);
+            box-shadow: 0 0 15px rgba(138, 60, 60, 0.2);
+        }
+
+        .stat-box {
+            background: rgba(176, 141, 87, 0.05);
+            border: 1px solid rgba(176, 141, 87, 0.1);
+            border-radius: 1.2rem;
+            padding: 14px 6px;
+            text-align: center;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* 數值字體 */
+        .vintage-num { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+
+        /* 輸入框樣式 */
+        .vintage-input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(176, 141, 87, 0.2);
+            color: var(--paper-light);
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+        }
+        .vintage-input:focus {
+            border-color: var(--copper-primary);
+            background: rgba(176, 141, 87, 0.05);
+        }
+
+        /* 按鈕樣式 */
+        .vintage-btn {
+            background: var(--copper-primary);
+            color: var(--bg-vintage);
+            font-weight: 800;
+            border-radius: 1rem;
+            transition: transform 0.1s;
+        }
+        .vintage-btn:active { transform: scale(0.96); }
+
+        .editing-glow {
+            border-color: var(--copper-primary) !important;
+            background: rgba(176, 141, 87, 0.15) !important;
+            box-shadow: 0 0 20px rgba(176, 141, 87, 0.2);
+        }
+
+        /* Modal 樣式 */
+        .modal-overlay {
+            background: rgba(28, 29, 26, 0.9);
+            backdrop-filter: blur(5px);
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal-card {
+            transform: scale(0.95);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .modal-active .modal-card {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        /* 滾動條隱藏 */
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- 啟動設定 -->
+    <div id="setupOverlay" class="fixed inset-0 z-[200] flex items-center justify-center bg-[#1c1d1a] p-6 overflow-y-auto">
+        <div class="max-w-sm w-full py-8">
+            
+            <div class="logo-wrapper">
+                <div class="logo-podium"></div>
+                <div id="logoContent" class="relative z-10 text-center">
+                    <div class="logo-main-text text-amber-100">Dee Pro</div>
+                    <div class="text-[10px] text-stone-500 font-bold tracking-[0.6em] mt-1 uppercase">By Tai</div>
+                </div>
+            </div>
+
+            <div class="vintage-card p-7 space-y-6">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="p0" placeholder="Player 1" class="vintage-input p-4 text-center text-sm outline-none">
+                    <input type="text" id="p1" placeholder="Player 2" class="vintage-input p-4 text-center text-sm outline-none">
+                    <input type="text" id="p2" placeholder="Player 3" class="vintage-input p-4 text-center text-sm outline-none">
+                    <input type="text" id="p3" placeholder="Player 4" class="vintage-input p-4 text-center text-sm outline-none">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-bold text-stone-500 px-1 tracking-widest uppercase">Point Value</label>
+                        <input type="number" id="cfgPoint" value="1" class="w-full vintage-input p-4 text-center vintage-num text-xl">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-bold text-stone-500 px-1 tracking-widest uppercase">Base Score</label>
+                        <input type="number" id="cfgBase" value="10" class="w-full vintage-input p-4 text-center vintage-num text-xl">
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="startGame()" class="w-full py-5 vintage-btn uppercase tracking-widest shadow-lg">
+                        Start Session
+                    </button>
+                    <!-- 顯示是否有存檔 -->
+                    <button id="resumeBtn" onclick="resumeGame()" class="hidden w-full py-3 border border-[#b08d57]/30 text-[#b08d57] text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-[#b08d57]/10">
+                        Resume Last Game
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主頁面 -->
+    <div id="app" class="max-w-md mx-auto hidden">
+        <header class="glass-header sticky top-0 z-50 px-6 pt-12 pb-4">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-black italic font-serif text-stone-300">Dee Pro</h2>
+                    <p class="text-[8px] font-bold text-stone-600 tracking-[0.4em] uppercase">Session in progress</p>
+                </div>
+                <!-- 清除資料按鈕 -->
+                <button onclick="showResetModal()" title="清除資料" class="w-10 h-10 bg-stone-900/50 rounded-full flex items-center justify-center border border-stone-800 text-stone-600 active:bg-red-900/20 active:text-red-400 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+            </div>
+            <div id="statsRow" class="grid grid-cols-4 gap-2 mb-3"></div>
+            
+            <!-- 新增：手動調整區 (罰分 Penalty) -->
+            <div class="grid grid-cols-4 gap-2 px-1">
+                <div class="relative group">
+                     <input type="number" min="0" id="adj0" onchange="updateAdjustment(0, this.value)" class="w-full bg-black/20 border border-stone-800 rounded-lg text-center text-[10px] text-red-400/80 py-1.5 focus:border-red-900 focus:bg-red-900/10 focus:text-red-400 outline-none transition-all placeholder-stone-700 font-bold" placeholder="罰">
+                </div>
+                <div class="relative group">
+                     <input type="number" min="0" id="adj1" onchange="updateAdjustment(1, this.value)" class="w-full bg-black/20 border border-stone-800 rounded-lg text-center text-[10px] text-red-400/80 py-1.5 focus:border-red-900 focus:bg-red-900/10 focus:text-red-400 outline-none transition-all placeholder-stone-700 font-bold" placeholder="罰">
+                </div>
+                <div class="relative group">
+                     <input type="number" min="0" id="adj2" onchange="updateAdjustment(2, this.value)" class="w-full bg-black/20 border border-stone-800 rounded-lg text-center text-[10px] text-red-400/80 py-1.5 focus:border-red-900 focus:bg-red-900/10 focus:text-red-400 outline-none transition-all placeholder-stone-700 font-bold" placeholder="罰">
+                </div>
+                <div class="relative group">
+                     <input type="number" min="0" id="adj3" onchange="updateAdjustment(3, this.value)" class="w-full bg-black/20 border border-stone-800 rounded-lg text-center text-[10px] text-red-400/80 py-1.5 focus:border-red-900 focus:bg-red-900/10 focus:text-red-400 outline-none transition-all placeholder-stone-700 font-bold" placeholder="罰">
+                </div>
+            </div>
+        </header>
+
+        <main class="p-5 pb-40 space-y-4" id="roundList"></main>
+    </div>
+
+    <!-- 輸入面板 -->
+    <div id="inputPad" class="fixed inset-x-0 bottom-0 z-[150] bg-[#1c1d1a]/98 backdrop-blur-xl border-t border-stone-800 rounded-t-[2.5rem] p-8 translate-y-full transition-transform duration-300">
+        <div class="flex justify-between items-center mb-6">
+            <div id="padInfo" class="text-stone-300 font-bold tracking-tight">Player Name - Round 1</div>
+            <button onclick="closePad()" class="text-stone-500 font-bold text-xs uppercase tracking-widest">Close</button>
+        </div>
+        <div class="grid grid-cols-7 gap-2">
+            <button onclick="setCard(0)" class="h-12 bg-stone-200 text-black font-bold rounded-xl active:scale-95">0</button>
+            <script>
+                for(let i=1; i<=13; i++) {
+                    let c = i >= 8 ? 'bg-red-900/20 text-red-400 border-red-900/30' : 'bg-stone-900 text-stone-400 border-stone-800';
+                    document.write(`<button onclick="setCard(${i})" class="h-12 border ${c} font-bold rounded-xl active:scale-95">${i}</button>`);
+                }
+            </script>
+            <button onclick="setCard(null)" class="col-span-7 h-10 mt-2 bg-stone-900/50 text-stone-600 text-[10px] font-bold uppercase rounded-xl">Clear Record</button>
+        </div>
+    </div>
+
+    <!-- 清除確認 Modal -->
+    <div id="resetModal" class="fixed inset-0 z-[300] hidden flex items-center justify-center p-6">
+        <div class="absolute inset-0 modal-overlay" onclick="closeResetModal()"></div>
+        <div class="relative vintage-card p-6 w-full max-w-xs modal-card text-center border-red-900/30 shadow-2xl shadow-black">
+            <div class="w-12 h-12 bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-900/30">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <h3 class="text-xl font-serif font-bold italic text-stone-200 mb-2">Warning</h3>
+            <p class="text-sm text-stone-400 mb-6 leading-relaxed">
+                確定要清除所有紀錄並重新開始嗎？<br>
+                <span class="text-red-400/80 text-xs">此動作無法復原</span>
+            </p>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeResetModal()" class="py-3 rounded-xl border border-stone-700 text-stone-400 text-xs font-bold uppercase tracking-widest active:bg-stone-800">
+                    Cancel
+                </button>
+                <button onclick="confirmReset()" class="py-3 rounded-xl bg-red-900/80 text-red-100 text-xs font-bold uppercase tracking-widest active:bg-red-800 shadow-lg shadow-red-900/20">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'dee_pro_v3_state';
+        // adjustments 存放每個玩家的「罰分數量」 (例如: 1, 2)
+        let state = { players: [], rounds: [], point: 1, base: 10, adjustments: [0, 0, 0, 0] };
+        let activeCell = null;
+
+        window.onload = function() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                document.getElementById('resumeBtn').classList.remove('hidden');
+            }
+        };
+
+        function resumeGame() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                state = JSON.parse(saved);
+                // 確保舊存檔也有 adjustments 欄位
+                if (!state.adjustments) state.adjustments = [0, 0, 0, 0];
+                enterGameMode();
+                render();
+            }
+        }
+
+        function startGame() {
+            state.players = [
+                document.getElementById('p0').value || 'P1',
+                document.getElementById('p1').value || 'P2',
+                document.getElementById('p2').value || 'P3',
+                document.getElementById('p3').value || 'P4'
+            ];
+            state.point = parseFloat(document.getElementById('cfgPoint').value);
+            state.base = parseInt(document.getElementById('cfgBase').value);
+            state.rounds = Array.from({length: 50}, (_, i) => ({ id: i+1, cards: [null,null,null,null], scores: [0,0,0,0], hasError: false }));
+            state.adjustments = [0, 0, 0, 0]; // Reset adjustments
+            
+            saveState();
+            enterGameMode();
+            render();
+        }
+
+        function enterGameMode() {
+            document.getElementById('setupOverlay').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        /* --- 手動調整功能 (罰分) --- */
+        function updateAdjustment(pIdx, val) {
+            // 只接受正數或 0，代表罰分的「單位數」
+            state.adjustments[pIdx] = val ? Math.abs(parseFloat(val)) : 0;
+            saveState();
+            render();
+        }
+
+        /* --- Modal 控制邏輯 --- */
+        function showResetModal() {
+            const modal = document.getElementById('resetModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('modal-active');
+            }, 10);
+        }
+
+        function closeResetModal() {
+            const modal = document.getElementById('resetModal');
+            modal.classList.remove('modal-active');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function confirmReset() {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
+        /* -------------------------- */
+
+        function calculateScores(round) {
+            round.hasError = false;
+            round.errorMsg = '';
+
+            if (round.cards.every(c => c === null)) return round.scores = [0,0,0,0];
+            
+            const winnersCount = round.cards.filter(c => c === 0).length;
+            const filledCount = round.cards.filter(c => c !== null && c !== "").length;
+
+            if (winnersCount > 1) {
+                round.hasError = true;
+                round.errorMsg = '⚠️ MULTIPLE WINNERS';
+            } else if (filledCount === 4 && winnersCount === 0) {
+                round.hasError = true;
+                round.errorMsg = '⚠️ NO WINNER';
+            }
+
+            const penalties = round.cards.map(c => {
+                if (c === null || c === "") return 0;
+                let m = c >= 13 ? 4 : (c >= 10 ? 3 : (c >= 8 ? 2 : 1));
+                return c * m;
+            });
+            const total = penalties.reduce((a, b) => a + b, 0);
+            
+            round.scores = penalties.map((p, i) => {
+                let s = total - (4 * p);
+                if (!round.hasError && winnersCount === 1 && state.base > 0) {
+                    if (round.cards[i] === 0) {
+                        s += 3 * state.base;
+                    } else {
+                        s -= state.base;
+                    }
+                }
+                return s;
+            });
+        }
+
+        function openPad(rIdx, pIdx, el) {
+            document.querySelectorAll('.editing-glow').forEach(d => d.classList.remove('editing-glow'));
+            el.classList.add('editing-glow');
+            activeCell = { rIdx, pIdx };
+            document.getElementById('padInfo').innerText = `${state.players[pIdx]} - Round ${rIdx + 1}`;
+            document.getElementById('inputPad').classList.remove('translate-y-full');
+        }
+
+        function closePad() {
+            document.querySelectorAll('.editing-glow').forEach(d => d.classList.remove('editing-glow'));
+            document.getElementById('inputPad').classList.add('translate-y-full');
+            activeCell = null;
+        }
+
+        function setCard(val) {
+            if (!activeCell) return;
+            const { rIdx, pIdx } = activeCell;
+            state.rounds[rIdx].cards[pIdx] = val;
+            calculateScores(state.rounds[rIdx]);
+            saveState(); 
+            render();
+            
+            if (val !== null && pIdx < 3) {
+                const next = document.querySelector(`[data-pos="${rIdx}-${pIdx+1}"]`);
+                if (next) openPad(rIdx, pIdx + 1, next);
+            } else {
+                closePad();
+            }
+        }
+
+        function render() {
+            // 更新輸入框的值 (確保重整後顯示)
+            for (let i = 0; i < 4; i++) {
+                const input = document.getElementById(`adj${i}`);
+                if (input && document.activeElement !== input) { // 避免輸入時被蓋掉
+                    input.value = state.adjustments[i] === 0 ? '' : state.adjustments[i];
+                }
+            }
+
+            // 計算所有玩家的罰分總單位數 (Total Penalty Units)
+            const totalPenaltyUnits = state.adjustments.reduce((a, b) => a + b, 0);
+
+            const stats = document.getElementById('statsRow');
+            const totals = state.players.map((_, i) => {
+                const validRounds = state.rounds.filter(r => r.cards.some(c => c !== null) && !r.hasError);
+                let roundScore = validRounds.reduce((s, r) => s + r.scores[i], 0);
+                
+                // 計算罰分影響 (Adjustment Effect)
+                // 自己的罰分單位
+                const myPenalty = state.adjustments[i] || 0;
+                
+                // 公式：(總罰分 - 自己的罰分) * 1 - (自己的罰分 * 3)
+                // 簡化後 = 總罰分 - (4 * 自己的罰分)
+                // 說明：從其他人那裡每單位各得 1 分，自己每單位罰 3 分
+                const penaltyEffect = totalPenaltyUnits - (4 * myPenalty);
+
+                // 總分 = (牌局分數 + 罰分影響) * 單價
+                let totalScore = (roundScore + penaltyEffect) * state.point;
+
+                return {
+                    score: totalScore,
+                    wins: validRounds.filter(r => r.cards[i] === 0).length
+                };
+            });
+
+            stats.innerHTML = state.players.map((name, i) => `
+                <div class="stat-box">
+                    <div class="text-[9px] font-bold text-stone-500 uppercase truncate mb-1">${name}</div>
+                    <div class="vintage-num text-sm ${totals[i].score >= 0 ? 'text-stone-100' : 'text-red-400'}">
+                        ${totals[i].score > 0 ? '+' : ''}${Math.floor(totals[i].score)}
+                    </div>
+                    <div class="text-[8px] font-bold text-stone-600 tracking-tight mt-1">
+                        WIN: <span class="text-stone-400">${totals[i].wins}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            const list = document.getElementById('roundList');
+            list.innerHTML = '';
+            
+            let lastPlayedIndex = -1;
+            for (let i = state.rounds.length - 1; i >= 0; i--) {
+                if (state.rounds[i].cards.some(c => c !== null)) {
+                    lastPlayedIndex = i;
+                    break;
+                }
+            }
+            const renderLimit = Math.min(state.rounds.length, lastPlayedIndex + 2);
+
+            state.rounds.slice(0, renderLimit).forEach((r, rIdx) => {
+                const card = document.createElement('div');
+                card.className = `vintage-card p-4 flex items-center space-x-3 transition-colors duration-300 ${r.hasError ? 'error-state' : ''}`;
+                
+                let cells = r.cards.map((c, pIdx) => {
+                    let color = c === 0 ? 'bg-stone-100 text-black' : (c >= 8 ? 'bg-red-900/10 text-red-500 border-red-900/20' : 'bg-stone-900/50 text-stone-400 border-stone-800');
+                    if (c === null) color = 'border-stone-800/50 text-stone-700'; 
+                    if (r.hasError) color += ' opacity-50';
+
+                    return `<div onclick="openPad(${rIdx}, ${pIdx}, this)" data-pos="${rIdx}-${pIdx}" class="flex-1 h-12 flex items-center justify-center rounded-xl vintage-num text-lg border transition-all cursor-pointer hover:bg-white/5 ${color}">${c === null ? '-' : c}</div>`;
+                }).join('');
+
+                let warningHtml = r.hasError ? 
+                    `<div class="absolute -top-2 right-4 bg-red-900 text-red-100 text-[9px] font-bold px-2 py-0.5 rounded border border-red-500 shadow-lg tracking-widest">${r.errorMsg}</div>` 
+                    : '';
+
+                card.innerHTML = `
+                    ${warningHtml}
+                    <div class="w-6 text-[10px] font-bold ${r.hasError ? 'text-red-400' : 'text-stone-600'} vintage-num">#${String(r.id).padStart(2,'0')}</div>
+                    <div class="flex-1 flex space-x-2">${cells}</div>
+                `;
+                list.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
+
