@@ -1,0 +1,85 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+
+@theme {
+  --font-headline: "Space Grotesk", "Noto Sans TC", sans-serif;
+  --font-body: "Manrope", "Noto Sans TC", sans-serif;
+  
+  --color-surface: #0a0a0a;
+  --color-surface-container: #141414;
+  --color-surface-container-high: #1c1c1c;
+  --color-surface-container-highest: #242424;
+  
+  /* HK Inspired Palette */
+  --color-hk-red: #E01A22; /* Taxi Red */
+  --color-hk-jade: #00A86B; /* Jade Green */
+  --color-hk-gold: #D4AF37; /* Gold Signage */
+  --color-hk-neon-blue: #00E5FF;
+  
+  --color-primary-neon: var(--color-hk-jade);
+  --color-primary-container: #008f5b;
+  --color-on-primary-container: #ffffff;
+  --color-on-surface-variant: #9ca3af;
+  --color-error-neon: var(--color-hk-red);
+  
+  --shadow-neon-jade: 0 0 10px rgba(0, 168, 107, 0.4), 0 0 20px rgba(0, 168, 107, 0.2);
+  --shadow-neon-red: 0 0 10px rgba(224, 26, 34, 0.4), 0 0 20px rgba(224, 26, 34, 0.2);
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-white font-body antialiased selection:bg-hk-jade/30;
+  }
+}
+
+.vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.hk-grid {
+  background-image: 
+    radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+  background-size: 20px 20px, 40px 40px, 40px 40px;
+}
+
+.hk-tile {
+  background-image: 
+    linear-gradient(45deg, rgba(255, 255, 255, 0.02) 25%, transparent 25%), 
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.02) 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.02) 75%), 
+    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.02) 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px 5px, 5px 0;
+}
+
+.neon-jade {
+  text-shadow: var(--shadow-neon-jade);
+}
+
+.neon-red {
+  text-shadow: var(--shadow-neon-red);
+}
+
+.glass {
+  background: rgba(15, 15, 15, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hk-sign {
+  @apply font-headline font-black uppercase tracking-widest;
+  background: linear-gradient(to bottom, #fff, #ccc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 5px rgba(255,255,255,0.3));
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
